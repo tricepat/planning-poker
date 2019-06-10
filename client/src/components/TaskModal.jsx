@@ -1,18 +1,23 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Header, Modal, Form, TextArea, Input } from 'semantic-ui-react'
+import { Modal, Form, TextArea, Input, Button, Icon } from 'semantic-ui-react';
+import API from '../api/index';
 
 export default class TaskModal extends Component {
 
   constructor(props){
     super(props);
     this.state = {
+      modalOpen: false,
       name: this.props.name,
       description: this.props.description
     };
 
     this.handleChange = this.handleChange.bind(this);
-
+    this.handleOpen = this.handleOpen.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+    this.addTask = this.addTask.bind(this);
+    this.updateTask = this.updateTask.bind(this);
   }
 
   componentWillReceiveProps(nextProps){
@@ -25,18 +30,29 @@ export default class TaskModal extends Component {
   }
 
   render() {
+    var {modalOpen} = this.state;
+    var {isNew} = this.props;
+    var iconText = isNew ? 'New Task' : 'Edit';
     return (
-      <div>
+      <Modal
+        trigger={
+          <Button floated='right' icon labelPosition='left' primary size='small' onClick={this.handleOpen}>
+            {isNew ? <Icon name='add' /> : <Icon name='edit' /> } {iconText}
+          </Button>}
+        open={modalOpen}
+        onClose={this.handleClose}
+      >
         <Modal.Content >
           <Modal.Description>
-            <Header>Default Profile Image</Header>
             <Form>
-              <Input placeholder='Task name' value={this.state.name} onChange={this.handleChange}/>
-              <TextArea placeholder='Description' value={this.state.description} onChange={this.handleChange}/>
+              <Input placeholder='Task name' value={this.state.name} onChange={this.handleChange.bind(this, 'name')}/>
+              <TextArea placeholder='Description' value={this.state.description} onChange={this.handleChange.bind(this, 'description')}/>
             </Form>
           </Modal.Description>
+          {isNew ? <Button floated='right' primary size='small' onClick={this.addTask}>Create</Button>
+            : <Button floated='right' primary size='small' onClick={this.updateTask}>Save</Button>}
         </Modal.Content>
-      </div>
+      </Modal>
     );
   }
 
@@ -46,10 +62,47 @@ export default class TaskModal extends Component {
     });
   }
 
+  handleOpen() {
+    this.setState({
+      modalOpen: true
+    })
+  }
+
+  handleClose() {
+    this.setState({
+      modalOpen: false
+    })
+  }
+
+  addTask(e) {
+    var {name, description} = this.state;
+    var {onSubmit} = this.props;
+    // validate name, description not empty
+    console.log('[TaskModal] creating new task with poll id ' + this.props.pollId + ', name: ' + name + ', desc: ' + description);
+    var newTask = {
+      name: name,
+      description: description
+    }
+    API.addTask(this.props.pollId, newTask).then(res => {
+      console.log('[TaskModal] add task response: ' + res + ', res.tasks: ' + res.tasks);
+      onSubmit(res.tasks);
+    });
+    this.setState({
+      modalOpen: false
+    });
+
+  }
+
+  updateTask(e) {
+
+  }
+
 }
 
 TaskModal.propTypes = {
   name: PropTypes.string,
   description: PropTypes.string,
-  onSubmit: PropTypes.func.isRequired
+  pollId: PropTypes.string.isRequired,
+  isNew: PropTypes.bool.isRequired,
+  onSubmit: PropTypes.func
 };

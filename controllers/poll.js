@@ -1,32 +1,44 @@
 const Poll = require('../models/poll');
 
-exports.findPollById = function (req, res) {
-    console.log('Getting poll by ID ' + req.params.id);
-    Poll.findById(req.params.id, function (err, poll) {
-        if (err) return next(err);
-        res.send(poll);
-    });
+exports.findPollById = function (req, res, next) {
+  console.log('Getting poll by ID ' + req.params.id);
+  Poll.findById(req.params.id, function (err, poll) {
+    if (err) return next(err);
+    res.send(poll);
+  });
 };
 
 exports.createPoll = function (req, res, next) {
-    console.log('Creating poll with name ' + req.body.name);
-    var poll = new Poll(
-        {
-            name: req.body.name
-        }
-    );
-    poll.save(function (err) {
-        if (err) {
-            return next(err);
-        }
-        res.status(200).json(poll);
-    })
+  console.log('Creating poll with name ' + req.body.name);
+  var poll = new Poll(
+    {
+      name: req.body.name
+    }
+  );
+  poll.save(function (err) {
+    if (err) return next(err);
+    res.status(200).json(poll);
+  });
 };
 
-exports.updatePoll = function (req, res) {
-    res.send('updating poll ' + req.params.id);
+exports.updatePoll = function (req, res, next) {
+  res.send('updating poll ' + req.params.id);
 };
 
-exports.deletePoll = function (req, res) {
-    res.send('deleting poll ' + req.params.id);
+exports.deletePoll = function (req, res, next) {
+  res.send('deleting poll ' + req.params.id);
 };
+
+exports.addTask = function (req, res, next) {
+  console.log('adding task with name ' + req.body.name + ', desc:' + req.body.description + ', poll id: ' + req.params.id);
+  var task = {
+    name: req.body.name,
+    description: req.body.description,
+    pollId: req.params.id
+  };
+  Poll.findOneAndUpdate({_id: req.params.id}, {$push: {tasks: task}}, function (err, poll) {
+    if (err) return next(err);
+    console.log('found poll and updated: ' + poll);
+    res.status(200).json(poll);
+  });
+}

@@ -96,7 +96,7 @@ export default class Home extends Component {
   joinPoll(e) {
     e.preventDefault();
     API.createUser({name: this.state.username}).then(res => {
-      this.props.history.push(`/poll:${this.state.pollId}`, {
+      this.props.history.push(`/poll/${this.state.pollId}`, {
         userId: res._id
       });
     });
