@@ -4,56 +4,44 @@ import config from '../config';
 const {dbApiUrl} = config;
 
 export default {
+  getUser: (id) => {
+    return axios.get(`${dbApiUrl}/users/${id}`).then(response => {
+      return response.data;
+    });
+  },
   createUser: (newUser) => {
     return axios.post(`${dbApiUrl}/users/new`, newUser).then(response => {
-      console.log('createUser response ' + response);
       return response.data;
-    }).catch((error) => {
-        console.log(error);
-    });
+      });
   },
   getPollById: (id) => {
     return axios.get(`${dbApiUrl}/polls/${id}`).then(response => {
-      console.log('getPollById response: ' + response);
       return response.data;
-    }).catch((error) => {
-        console.log(error);
     });
   },
   createPoll: (newPoll) => {
     return axios.post(`${dbApiUrl}/polls/new`, newPoll).then(response => {
-      console.log('createPoll response ' + response);
       return response.data;
-    }).catch((error) => {
-        console.log(error);
     });
   },
   getTasks: (id) => {
     return axios.get(`${dbApiUrl}/tasks/inPoll/${id}`).then(response => {
       return response.data;
-    }).catch((error) => {
-        console.log(error);
     });
   },
   createTask: (newTask) => {
     return axios.post(`${dbApiUrl}/tasks/new`, newTask).then(response => {
       return response.data;
-    }).catch((error) => {
-      console.log(error);
     });
   },
   updateTask: (id, valuesMap) => {
     return axios.post(`${dbApiUrl}/tasks/${id}`, valuesMap).then(response => {
       return response.data;
-    }).catch((error) => {
-      console.log(error);
     });
   },
   vote: (id, vote) => {
     return axios.post(`${dbApiUrl}/tasks/vote/${id}`, vote).then(response => {
       return response.data;
-    }).catch((error) => {
-      console.log(error);
     });
   }
 }

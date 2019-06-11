@@ -10,22 +10,19 @@ export default class Voting extends Component {
     this.state = {
       selectedOption: this.props.selectedOption
     };
-
     this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidUpdate(prevProps){
     if(this.props.selectedOption !== prevProps.selectedOption){
-      this.setState({
-        selectedOption: this.props.selectedOption
-      });
+      this.setState({ selectedOption: this.props.selectedOption });
     }
   }
 
   render() {
     return (
       <Segment>
-        <Header as='h4'>What's your estimate?</Header>
+        <Header as='h4'>How many points?</Header>
         <Card.Group itemsPerRow={3}>
           {this.renderOptions()}
         </Card.Group>
@@ -52,9 +49,7 @@ export default class Voting extends Component {
   handleClick(e) {
     var {onSelect} = this.props;
     var votedOption = e.currentTarget.id;
-    this.setState({
-      selectedOption: votedOption
-    });
+    this.setState({ selectedOption: votedOption });
     onSelect(votedOption);
   }
 }

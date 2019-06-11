@@ -3,23 +3,26 @@ import Results from './Results'
 import Voting from './Voting'
 import TaskModal from './TaskModal'
 import API from '../api/index'
-import {Button, Form, Grid, Header, Table, Container, Checkbox, Icon, Item, Segment, Divider } from 'semantic-ui-react';
+import {Grid, Header, Table, Container, Checkbox, Icon, Segment, Divider, Message } from 'semantic-ui-react';
 
 export default class Poll extends Component {
   constructor(props) {
     super(props);
     this.state = {
       tasks: [],
-      name: null,
+      pollName: null,
       userId: null,
+      username: null,
       selectedTask: null,
-      currVote: null
+      currVote: null,
+      errorMsg: null
     };
 
     this.updateTask = this.updateTask.bind(this);
     this.addTask = this.addTask.bind(this);
     this.onSelectTask = this.onSelectTask.bind(this);
     this.vote = this.vote.bind(this);
+    this.renderPoll = this.renderPoll.bind(this);
   }
 
   componentDidMount() {
@@ -28,60 +31,76 @@ export default class Poll extends Component {
     if (!location.state || !location.state.userId) { // redirect to 'login' if user is unidentified
       return this.props.history.push(`/`);
     }
-    // get poll, get tasks
+    // get poll, then get tasks and user
     API.getPollById(id).then(res => {
-      console.log('[Poll] fetched poll ' + res + '. setting name: ' + res.name);
-      API.getTasks(id).then(res => {
-        console.log('[Poll] fetched tasks: ' + res + ', count: ' + res.length);
-        this.setState({
-          userId: location.state.userId,
-          name: res.name,
-          tasks: res
-        });
-      });
+      this.setState({ pollName: res.name });
+    }).catch(e => {
+      this.setState({ errorMsg: 'Oops! Poll does not exist or could not be fetched.' });
     });
 
+    API.getTasks(id).then(res => {
+      this.setState({ tasks: res });
+    }).catch(e => {
+      this.setState({ errorMsg: 'Sorry, tasks could not be fetched.' });
+    });
+    API.getUser(location.state.userId).then(res => {
+      this.setState({
+        userId: location.state.userId,
+        username: res.name
+      });
+    });
   }
 
   render() {
-    var {username, selectedTask} = this.state;
+    var {errorMsg} = this.state;
+    return errorMsg ? (<Message icon='frown outline' negative content={errorMsg} />) : this.renderPoll();
+  }
+
+  renderPoll() {
+    var {username, selectedTask, pollName} = this.state;
     var {id} = this.props.match.params;
-    return (
+
+    return(
       <Container>
-        <Header as='h3'>Welcome, {username}</Header>
-        <Grid columns={2} divided>
-          <Grid.Row>
-            <Grid.Column>
-              <Table celled compact definition selectable>
-                <Table.Header fullWidth>
-                  <Table.Row>
-                    <Table.HeaderCell colSpan='6'>Task</Table.HeaderCell>
-                    <Table.HeaderCell>Voting Status</Table.HeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {this.renderTasks()}
-                </Table.Body>
-                <Table.Footer fullWidth>
-                  <Table.Row>
-                    <Table.HeaderCell colSpan='8'>
-                      <TaskModal name='name' description='describe' taskExists={false} pollId={id} onSubmit={this.addTask}/>
-                      <Button size='small'>Open All</Button>
-                      <Button disabled size='small'>
-                        Close All
-                      </Button>
-                    </Table.HeaderCell>
-                  </Table.Row>
-                </Table.Footer>
-              </Table>
-            </Grid.Column>
-            <Grid.Column>
-              {selectedTask ? this.renderSelectedTask() : null}
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </Container>
-    );
+          <Grid columns={2} divided padded>
+            <Grid.Row>
+              <Message size='tiny' icon>
+                <Icon name='thumbs up outline' />
+                <Message.Content>
+                  <Message.Header>Glad you're here, {username}</Message.Header>
+                  Ready to plan?
+                </Message.Content>
+              </Message>
+            </Grid.Row>
+            <Grid.Row>
+              <Grid.Column>
+              <Header as='h3'>{pollName}</Header>
+                <Table celled compact definition selectable>
+                  <Table.Header fullWidth>
+                    <Table.Row>
+                      <Table.HeaderCell colSpan='6'>Task</Table.HeaderCell>
+                      <Table.HeaderCell>Voting Status</Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
+                    {this.renderTasks()}
+                  </Table.Body>
+                  <Table.Footer fullWidth>
+                    <Table.Row>
+                      <Table.HeaderCell colSpan='8'>
+                        <TaskModal taskExists={false} pollId={id} onSubmit={this.addTask}/>
+                      </Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Footer>
+                </Table>
+              </Grid.Column>
+              <Grid.Column>
+                {selectedTask ? this.renderSelectedTask() : null}
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        </Container>
+      );
   }
 
   renderTasks() {
@@ -107,7 +126,7 @@ export default class Poll extends Component {
         <Grid.Row>
           <Segment clearing >
             <Header as='h4'>
-              Description
+              {selectedTask.name}
               <Header.Subheader>{selectedTask.description}</Header.Subheader>
             </Header>
             <TaskModal name={selectedTask.name} description={selectedTask.description}
@@ -126,7 +145,7 @@ export default class Poll extends Component {
   // convert list of {userId: vote} to map of vote:count
   getAggregatedVotes(userToVoteArr) {
     var aggregatedVotes = {};
-    Object.entries(userToVoteArr).map(([userId, vote]) => {
+    Object.entries(userToVoteArr).forEach(([userId, vote]) => {
       if (vote in aggregatedVotes) {
         aggregatedVotes[vote]++;
       } else {
@@ -138,7 +157,6 @@ export default class Poll extends Component {
 
   vote(value) {
     var {selectedTask, userId} = this.state;
-    console.log('user ' + userId + ' voting for task ' + selectedTask._id + ', value: ' + value);
     var vote = {
       userId: userId,
       value: value
@@ -146,18 +164,14 @@ export default class Poll extends Component {
     API.vote(selectedTask._id, vote).then(task => {
       this.updateTask(task);
       // update user's current vote
-      this.setState({
-        currVote: value
-      });
+      this.setState({ currVote: value });
     });
   }
 
   onSelectTask(e) {
     var {tasks, userId} = this.state;
     var selectedTaskId = e.currentTarget.id;
-    var selectedTask = tasks.find(t => {
-      return t._id === selectedTaskId;
-    });
+    var selectedTask = tasks.find(t => { return t._id === selectedTaskId; });
     // find user's vote, if exists
     var currVote = userId in selectedTask.votes ? selectedTask.votes[userId] : null;
     this.setState({
@@ -168,25 +182,16 @@ export default class Poll extends Component {
 
   toggleTaskStatus(taskId, e) {
     var {tasks} = this.state;
-    var selectedTask = tasks.find(t => {
-      return t._id === taskId;
-    });
-    var values = {
-      isVotable: !selectedTask.isVotable
-    }
-  //  update task status in db
-    API.updateTask(taskId, values).then(task => {
-      this.updateTask(task);
-    });
+    var selectedTask = tasks.find(t => { return t._id === taskId; });
+    var values = { isVotable: !selectedTask.isVotable };
+    API.updateTask(taskId, values).then(task => { this.updateTask(task); });
   }
 
   // add task to state (avoid additional call to db)
   addTask(newTask) {
     var {tasks} = this.state;
     tasks.push(newTask);
-    this.setState({
-      tasks: tasks
-    });
+    this.setState({ tasks: tasks });
   }
 
   // update task in state (avoid additional call to db)

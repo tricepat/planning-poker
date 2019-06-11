@@ -5,31 +5,31 @@ import { Card, Message, Label, Header, Segment} from 'semantic-ui-react';
 export default class Results extends Component {
 
   render() {
-    return (
+    var {values} = this.props;
+    return Object.keys(values).length > 0 ?
       <Segment>
-        <Header as='h4'>Results</Header>
+        <Header as='h4'>Results are in!</Header>
         <Card.Group itemsPerRow={3}>
           {this.renderValues()}
         </Card.Group>
       </Segment>
-    );
+        : <Message icon='info' content='No results yet... Reopen task for voting!'/>;
+    ;
   }
 
   renderValues() {
     var {values} = this.props;
     var sortedValues = this.sortValues(values);
-    return (sortedValues.length > 0) ?
+    return (
       sortedValues.map((value, idx) => {
         return (
           <Card key={value[0]} id={value[0]}  color='black'>
-            <Label color='orange' floating>
-              {value[1]}
-            </Label>
+            <Label color='orange' floating> {value[1]} </Label>
             <Card.Content content={value[0]} textAlign='center' />
           </Card>
         );
       })
-      : <Message icon='warning circle' content='No one has voted!' />;
+    );
   }
 
   sortValues(values) {

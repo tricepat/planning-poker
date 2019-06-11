@@ -48,8 +48,11 @@ export default class TaskModal extends Component {
               <TextArea placeholder='Description' value={description} onChange={this.handleChange.bind(this, 'description')}/>
             </Form>
           </Modal.Description>
-          {taskExists ? <Button floated='right' primary size='small' onClick={this.updateTask}>Save</Button>
-            : <Button floated='right' primary size='small' onClick={this.addTask}>Create</Button>}
+          {taskExists ?
+            <Button floated='right' primary size='small' onClick={this.updateTask}
+              disabled={!name || !description}> Save </Button>
+            : <Button floated='right' primary size='small' onClick={this.addTask}
+              disabled={!name || !description}> Create </Button>}
         </Modal.Content>
       </Modal>
     );
@@ -58,36 +61,24 @@ export default class TaskModal extends Component {
   addTask(e) {
     var {name, description} = this.state;
     var {onSubmit} = this.props;
-    // TODO: validate name, description not empty
-    console.log('[TaskModal] creating new task with poll id ' + this.props.pollId + ', name: ' + name + ', desc: ' + description);
     var newTask = {
       name: name,
       description: description,
-      pollId: this.props.pollId
+      pollId: 'this.props.pollId'
     }
-    API.createTask(newTask).then(res => {
-      onSubmit(res);
-    });
-    this.setState({
-      modalOpen: false
-    });
+    API.createTask(newTask).then(res => { onSubmit(res); });
+    this.setState({ modalOpen: false });
   }
 
   updateTask(e) {
     var {name, description} = this.state;
     var {onSubmit, taskId} = this.props;
-    // TODO: validate name, description not empty
-    console.log('[TaskModal] updating task ' + taskId + ', name: ' + name + ', desc: ' + description);
     var updatedTask = {
       name: name,
       description: description
     }
-    API.updateTask(taskId, updatedTask).then(res => {
-      onSubmit(res);
-    });
-    this.setState({
-      modalOpen: false
-    });
+    API.updateTask(taskId, updatedTask).then(res => { onSubmit(res); });
+    this.setState({ modalOpen: false });
   }
 
   handleChange(fieldName, e) { this.setState({ [fieldName]: e.target.value }); }
@@ -103,8 +94,8 @@ TaskModal.propTypes = {
   taskId: PropTypes.string,
   taskExists: PropTypes.bool.isRequired,
   validateModalType: function(props, propName, componentName) {
-        if ((props['taskExists'] === true) && (props['taskId'] === undefined)) {
-            return new Error('Please provide existing taskId!');
-        }
-    },
+    if ((props['taskExists'] === true) && (props['taskId'] === undefined)) {
+        return new Error('Please provide existing taskId!');
+    }
+  }
 };
