@@ -1,23 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Card } from 'semantic-ui-react';
+import { Card, Message} from 'semantic-ui-react';
 
 export default class Results extends Component {
   constructor(props){
     super(props);
-    this.state = {
-      sortedValues: this.sortValues(this.props.values, true)
-    };
 
-    this.sortValues = this.sortValues.bind(this);
-  }
-
-  componentWillReceiveProps(nextProps){
-    if(nextProps.value !== this.props.value){
-      this.setState({
-        sortedValues: this.sortValues(nextProps.values, true)
-      });
-    }
   }
 
   render() {
@@ -29,15 +17,17 @@ export default class Results extends Component {
   }
 
   renderValues() {
-    var {sortedValues} = this.state;
-
-    return sortedValues.map((value, idx) => {
-      return (
-        <Card key={value} id={value}  color='black'>
-          <Card.Content content={value} textAlign='center' />
-        </Card>
-      );
-    });
+    var {values} = this.props;
+    var sortedValues = this.sortValues(values);
+    return (sortedValues.length > 0) ?
+      sortedValues.map((value, idx) => {
+        return (
+          <Card key={value} id={value}  color='black'>
+            <Card.Content content={value} textAlign='center' />
+          </Card>
+        );
+      })
+      : <Message icon='warning circle' content='No one has voted!' />;
   }
 
   sortValues(values) {

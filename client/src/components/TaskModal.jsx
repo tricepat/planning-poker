@@ -91,7 +91,6 @@ export default class TaskModal extends Component {
     this.setState({
       modalOpen: false
     });
-
   }
 
   // TODO

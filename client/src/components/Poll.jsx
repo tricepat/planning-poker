@@ -105,11 +105,16 @@ export default class Poll extends Component {
 
     return (
       <div>
-        <Item content={selectedTask.description}/>
-        <TaskModal name={selectedTask.name} description={selectedTask.description}
-          isNew={false} pollId={id} onSubmit={this.updateTask}/>
-        {selectedTask.isVotable ? <Voting onSelect={this.vote} selectedOption={selectedOption}/>
-          : <Results values={aggregatedVotes}/>}
+        <Grid.Row>
+          <Item content={selectedTask.description}/>
+          <TaskModal name={selectedTask.name} description={selectedTask.description}
+            isNew={false} pollId={id} onSubmit={this.updateTask}
+          />
+        </Grid.Row>
+        <Grid.Row>
+          {selectedTask.isVotable ? <Voting onSelect={this.vote} selectedOption={selectedOption}/>
+            : <Results values={aggregatedVotes}/>}
+        </Grid.Row>
       </div>
     );
   }
@@ -135,7 +140,6 @@ export default class Poll extends Component {
       value: value
     }
     API.vote(selectedTask._id, vote).then(task => {
-      console.log('voted! response: ' + task);
       this.updateTask(task);
       // update user's current vote
       this.setState({
@@ -163,7 +167,7 @@ export default class Poll extends Component {
     var selectedTask = tasks.find(t => {
       return t._id === taskId;
     });
-    console.log('toggling status for task ' + taskId + ' to ' + !selectedTask.isVotable);
+    console.log('toggling status for task ' + selectedTask.name + ' to ' + !selectedTask.isVotable);
     var values = {
       isVotable: !selectedTask.isVotable
     }
@@ -186,10 +190,9 @@ export default class Poll extends Component {
   // update task in state (avoid additional call to db)
   updateTask(task) {
     var {tasks} = this.state;
-    console.log('[Poll:updateTask]');
-    // remove outdated task and push updated
-    tasks = tasks.filter(t => !(t._id === task._id));
-    tasks.push(task);
+    // replace outdated task
+    var taskIdx = tasks.findIndex(t => t._id === task._id);
+    tasks[taskIdx] = task;
     this.setState({
       tasks: tasks,
       selectedTask: tasks.find(t => (t._id === task._id))
