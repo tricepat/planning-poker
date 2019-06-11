@@ -5,7 +5,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const app = express();
 
-const vote = require('./routes/vote');
 const task = require('./routes/task');
 const user = require('./routes/user');
 const poll = require('./routes/poll');

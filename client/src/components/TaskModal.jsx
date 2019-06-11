@@ -81,11 +81,12 @@ export default class TaskModal extends Component {
     console.log('[TaskModal] creating new task with poll id ' + this.props.pollId + ', name: ' + name + ', desc: ' + description);
     var newTask = {
       name: name,
-      description: description
+      description: description,
+      pollId: this.props.pollId
     }
-    API.addTask(this.props.pollId, newTask).then(res => {
-      console.log('[TaskModal] add task response: ' + res + ', res.tasks: ' + res.tasks);
-      onSubmit(res.tasks);
+    API.createTask(newTask).then(res => {
+      console.log('[TaskModal] create task response: ' + res);
+      onSubmit(res);
     });
     this.setState({
       modalOpen: false
@@ -93,8 +94,8 @@ export default class TaskModal extends Component {
 
   }
 
+  // TODO
   updateTask(e) {
-
   }
 
 }

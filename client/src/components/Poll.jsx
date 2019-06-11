@@ -12,11 +12,14 @@ export default class Poll extends Component {
       tasks: [],
       name: null,
       userId: null,
-      selectedTask: null
+      selectedTask: null,
+      currVote: null
     };
 
-    this.updateTasks = this.updateTasks.bind(this);
+    this.updateTask = this.updateTask.bind(this);
+    this.addTask = this.addTask.bind(this);
     this.onSelectTask = this.onSelectTask.bind(this);
+    this.vote = this.vote.bind(this);
   }
 
   componentDidMount() {
@@ -26,14 +29,16 @@ export default class Poll extends Component {
       return this.props.history.push(`/`);
     }
     console.log('user ID: ' + location.state.userId + ', poll id: ' + id);
-    // get poll, set tasks
+    // get poll, get tasks
     API.getPollById(id).then(res => {
-      console.log('[Poll] fetched poll ' + res + '. setting name: ' + res.name + ', tasks: ' + res.tasks);
-      this.setState({
-        userId: location.state.userId,
-        name: res.name,
-        tasks: res.tasks,
-      //  selectedTask: res.tasks && res.tasks.length ? res.tasks[0] : null
+      console.log('[Poll] fetched poll ' + res + '. setting name: ' + res.name);
+      API.getTasks(id).then(res => {
+        console.log('[Poll] fetched tasks: ' + res + ', count: ' + res.length);
+        this.setState({
+          userId: location.state.userId,
+          name: res.name,
+          tasks: res
+        });
       });
     });
 
@@ -61,7 +66,7 @@ export default class Poll extends Component {
                 <Table.Footer fullWidth>
                   <Table.Row>
                     <Table.HeaderCell colSpan='8'>
-                      <TaskModal name='name' description='describe' isNew={true} pollId={id} onSubmit={this.updateTasks}/>
+                      <TaskModal name='name' description='describe' isNew={true} pollId={id} onSubmit={this.addTask}/>
                       <Button size='small'>Open All</Button>
                       <Button disabled size='small'>
                         Close All
@@ -72,9 +77,7 @@ export default class Poll extends Component {
               </Table>
             </Grid.Column>
             <Grid.Column>
-              {selectedTask ? this.renderSelectedTask()
-                : null
-              }
+              {selectedTask ? this.renderSelectedTask() : null}
             </Grid.Column>
           </Grid.Row>
         </Grid>
@@ -84,58 +87,112 @@ export default class Poll extends Component {
 
   renderTasks() {
     var {tasks} = this.state;
-    console.log('[renderTasks] tasks: ' + tasks);
     return tasks.map((task, idx) => {
-      console.log('task: ' + task._id + ', index: ' + idx);
       return (
         <Table.Row key={task._id} id={task._id} onClick={this.onSelectTask}>
           <Table.Cell colSpan='6'>{task.name}</Table.Cell>
-          <Table.Cell><Checkbox slider /> {task.isVotable ? 'Open' : 'Closed'}</Table.Cell>
+          <Table.Cell><Checkbox toggle checked={task.isVotable} onClick={this.toggleTaskStatus.bind(this, task._id)}/> {task.isVotable ? 'Open' : 'Closed'}</Table.Cell>
         </Table.Row>
       );
     });
   }
 
   renderSelectedTask() {
-    var {selectedTask, userId} = this.state;
+    var {selectedTask, userId, currVote} = this.state;
     var {id} = this.props.match.params;
+    var selectedOption = currVote ? currVote : null;
+    var aggregatedVotes = this.getAggregatedVotes(selectedTask.votes);
 
-    // var votes = selectedTask.votes;
-    // console.log('selected task votes: ' + votes);
-
-    // render description
-    // button to edit task (TaskModal)
     return (
-      <Container>
-      <Item content={selectedTask.description}/>
-      <TaskModal name={selectedTask.name} description={selectedTask.description}
-      isNew={false} pollId={id} onSubmit={this.updateTasks}/>
-      </Container>
+      <div>
+        <Item content={selectedTask.description}/>
+        <TaskModal name={selectedTask.name} description={selectedTask.description}
+          isNew={false} pollId={id} onSubmit={this.updateTask}/>
+        {selectedTask.isVotable ? <Voting onSelect={this.vote} selectedOption={selectedOption}/>
+          : <Results values={aggregatedVotes}/>}
+      </div>
     );
   }
 
-  handleChange(fieldName, e) {
-    this.setState({
-      [fieldName]: e.target.value
+  // convert list of {userId: vote} to map of vote:count
+  getAggregatedVotes(userToVoteArr) {
+    var aggregatedVotes = {};
+    Object.entries(userToVoteArr).map(([userId, vote]) => {
+      if (vote in aggregatedVotes) {
+        aggregatedVotes[vote]++;
+      } else {
+        aggregatedVotes[vote] = 1;
+      }
+    });
+    return aggregatedVotes;
+  }
+
+  vote(value) {
+    var {selectedTask, userId} = this.state;
+    console.log('user ' + userId + ' voting for task ' + selectedTask._id + ', value: ' + value);
+    var vote = {
+      userId: userId,
+      value: value
+    }
+    API.vote(selectedTask._id, vote).then(task => {
+      console.log('voted! response: ' + task);
+      this.updateTask(task);
+      // update user's current vote
+      this.setState({
+        currVote: value
+      });
     });
   }
 
-  updateTasks(tasks) {
+  onSelectTask(e) {
+    var {tasks, userId} = this.state;
+    var selectedTaskId = e.currentTarget.id;
+    var selectedTask = tasks.find(t => {
+      return t._id === selectedTaskId;
+    });
+    // find user's vote, if exists
+    var currVote = userId in selectedTask.votes ? selectedTask.votes[userId] : null;
+    this.setState({
+      selectedTask: selectedTask,
+      currVote: currVote
+    });
+  }
+
+  toggleTaskStatus(taskId, e) {
+    var {tasks} = this.state;
+    var selectedTask = tasks.find(t => {
+      return t._id === taskId;
+    });
+    console.log('toggling status for task ' + taskId + ' to ' + !selectedTask.isVotable);
+    var values = {
+      isVotable: !selectedTask.isVotable
+    }
+  //  update task status in db
+    API.updateTask(taskId, values).then(task => {
+      console.log('updated task. new status: ' + task.isVotable);
+      this.updateTask(task);
+    });
+  }
+
+  // add task to state (avoid additional call to db)
+  addTask(newTask) {
+    var {tasks} = this.state;
+    tasks.push(newTask);
     this.setState({
       tasks: tasks
     });
   }
 
-  onSelectTask(e) {
+  // update task in state (avoid additional call to db)
+  updateTask(task) {
     var {tasks} = this.state;
-    var selectedTaskId = e.currentTarget.id;
-    var selectedTask = tasks.find(t => {
-      return t._id === selectedTaskId;
-    });
+    console.log('[Poll:updateTask]');
+    // remove outdated task and push updated
+    tasks = tasks.filter(t => !(t._id === task._id));
+    tasks.push(task);
     this.setState({
-      selectedTask: selectedTask
+      tasks: tasks,
+      selectedTask: tasks.find(t => (t._id === task._id))
     });
-    console.log('selected task: ' + selectedTask._id);
   }
-
 }
