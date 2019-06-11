@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Segment, Header } from 'semantic-ui-react';
-import API from '../api/index';
 
 const VOTING_OPTIONS = ['0', '1/2', '1', '2', '3', '5', '8', '13'];
 
@@ -15,10 +14,10 @@ export default class Voting extends Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  componentWillReceiveProps(nextProps){
-    if(nextProps.value !== this.props.value){
+  componentDidUpdate(prevProps){
+    if(this.props.selectedOption !== prevProps.selectedOption){
       this.setState({
-        selectedOption: nextProps.selectedOption
+        selectedOption: this.props.selectedOption
       });
     }
   }

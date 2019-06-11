@@ -20,64 +20,45 @@ export default class TaskModal extends Component {
     this.updateTask = this.updateTask.bind(this);
   }
 
-  componentWillReceiveProps(nextProps){
-    if(nextProps.value !== this.props.value){
+  componentDidUpdate(prevProps){
+    if(this.props.taskId !== prevProps.taskId){
       this.setState({
-        name:nextProps.name,
-        description: nextProps.description
+        name: this.props.name,
+        description: this.props.description
       });
     }
   }
 
   render() {
-    var {modalOpen} = this.state;
-    var {isNew} = this.props;
-    var iconText = isNew ? 'New Task' : 'Edit';
+    var {modalOpen, name, description} = this.state;
+    var {taskExists} = this.props;
+    var iconText = taskExists ? 'Edit' : 'New Task';
     return (
       <Modal
         trigger={
           <Button floated='right' icon labelPosition='left' primary size='small' onClick={this.handleOpen}>
-            {isNew ? <Icon name='add' /> : <Icon name='edit' /> } {iconText}
+            {taskExists ? <Icon name='edit' /> : <Icon name='add' /> } {iconText}
           </Button>}
         open={modalOpen}
-        onClose={this.handleClose}
-      >
+        onClose={this.handleClose}>
         <Modal.Content >
           <Modal.Description>
             <Form>
-              <Input placeholder='Task name' value={this.state.name} onChange={this.handleChange.bind(this, 'name')}/>
-              <TextArea placeholder='Description' value={this.state.description} onChange={this.handleChange.bind(this, 'description')}/>
+              <Input placeholder='Task name' value={name} onChange={this.handleChange.bind(this, 'name')}/>
+              <TextArea placeholder='Description' value={description} onChange={this.handleChange.bind(this, 'description')}/>
             </Form>
           </Modal.Description>
-          {isNew ? <Button floated='right' primary size='small' onClick={this.addTask}>Create</Button>
-            : <Button floated='right' primary size='small' onClick={this.updateTask}>Save</Button>}
+          {taskExists ? <Button floated='right' primary size='small' onClick={this.updateTask}>Save</Button>
+            : <Button floated='right' primary size='small' onClick={this.addTask}>Create</Button>}
         </Modal.Content>
       </Modal>
     );
   }
 
-  handleChange(fieldName, e) {
-    this.setState({
-      [fieldName]: e.target.value
-    });
-  }
-
-  handleOpen() {
-    this.setState({
-      modalOpen: true
-    })
-  }
-
-  handleClose() {
-    this.setState({
-      modalOpen: false
-    })
-  }
-
   addTask(e) {
     var {name, description} = this.state;
     var {onSubmit} = this.props;
-    // validate name, description not empty
+    // TODO: validate name, description not empty
     console.log('[TaskModal] creating new task with poll id ' + this.props.pollId + ', name: ' + name + ', desc: ' + description);
     var newTask = {
       name: name,
@@ -85,7 +66,6 @@ export default class TaskModal extends Component {
       pollId: this.props.pollId
     }
     API.createTask(newTask).then(res => {
-      console.log('[TaskModal] create task response: ' + res);
       onSubmit(res);
     });
     this.setState({
@@ -93,16 +73,38 @@ export default class TaskModal extends Component {
     });
   }
 
-  // TODO
   updateTask(e) {
+    var {name, description} = this.state;
+    var {onSubmit, taskId} = this.props;
+    // TODO: validate name, description not empty
+    console.log('[TaskModal] updating task ' + taskId + ', name: ' + name + ', desc: ' + description);
+    var updatedTask = {
+      name: name,
+      description: description
+    }
+    API.updateTask(taskId, updatedTask).then(res => {
+      onSubmit(res);
+    });
+    this.setState({
+      modalOpen: false
+    });
   }
 
+  handleChange(fieldName, e) { this.setState({ [fieldName]: e.target.value }); }
+  handleOpen() { this.setState({modalOpen: true}); }
+  handleClose() { this.setState({modalOpen: false}); }
 }
 
 TaskModal.propTypes = {
   name: PropTypes.string,
   description: PropTypes.string,
+  onSubmit: PropTypes.func.isRequired,
   pollId: PropTypes.string.isRequired,
-  isNew: PropTypes.bool.isRequired,
-  onSubmit: PropTypes.func
+  taskId: PropTypes.string,
+  taskExists: PropTypes.bool.isRequired,
+  validateModalType: function(props, propName, componentName) {
+        if ((props['taskExists'] === true) && (props['taskId'] === undefined)) {
+            return new Error('Please provide existing taskId!');
+        }
+    },
 };

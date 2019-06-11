@@ -66,12 +66,6 @@ export default class Home extends Component {
     );
   }
 
-  handleChange(fieldName, e) {
-    this.setState({
-      [fieldName]: e.target.value
-    });
-  }
-
   createPoll(e) {
     e.preventDefault();
     // create and save new poll to db. get pollId in return and set state
@@ -101,4 +95,6 @@ export default class Home extends Component {
       });
     });
   }
+
+  handleChange(fieldName, e) { this.setState({ [fieldName]: e.target.value });}
 }

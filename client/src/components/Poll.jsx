@@ -28,7 +28,6 @@ export default class Poll extends Component {
     if (!location.state || !location.state.userId) { // redirect to 'login' if user is unidentified
       return this.props.history.push(`/`);
     }
-    console.log('user ID: ' + location.state.userId + ', poll id: ' + id);
     // get poll, get tasks
     API.getPollById(id).then(res => {
       console.log('[Poll] fetched poll ' + res + '. setting name: ' + res.name);
@@ -66,7 +65,7 @@ export default class Poll extends Component {
                 <Table.Footer fullWidth>
                   <Table.Row>
                     <Table.HeaderCell colSpan='8'>
-                      <TaskModal name='name' description='describe' isNew={true} pollId={id} onSubmit={this.addTask}/>
+                      <TaskModal name='name' description='describe' taskExists={false} pollId={id} onSubmit={this.addTask}/>
                       <Button size='small'>Open All</Button>
                       <Button disabled size='small'>
                         Close All
@@ -98,7 +97,7 @@ export default class Poll extends Component {
   }
 
   renderSelectedTask() {
-    var {selectedTask, userId, currVote} = this.state;
+    var {selectedTask, currVote} = this.state;
     var {id} = this.props.match.params;
     var selectedOption = currVote ? currVote : null;
     var aggregatedVotes = this.getAggregatedVotes(selectedTask.votes);
@@ -112,8 +111,7 @@ export default class Poll extends Component {
               <Header.Subheader>{selectedTask.description}</Header.Subheader>
             </Header>
             <TaskModal name={selectedTask.name} description={selectedTask.description}
-              isNew={false} pollId={id} onSubmit={this.updateTask}
-            />
+              taskExists={true} pollId={id} taskId={selectedTask._id} onSubmit={this.updateTask}/>
           </Segment>
         </Grid.Row>
         <Divider />
@@ -173,13 +171,11 @@ export default class Poll extends Component {
     var selectedTask = tasks.find(t => {
       return t._id === taskId;
     });
-    console.log('toggling status for task ' + selectedTask.name + ' to ' + !selectedTask.isVotable);
     var values = {
       isVotable: !selectedTask.isVotable
     }
   //  update task status in db
     API.updateTask(taskId, values).then(task => {
-      console.log('updated task. new status: ' + task.isVotable);
       this.updateTask(task);
     });
   }
