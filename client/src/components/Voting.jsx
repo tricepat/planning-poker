@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Card } from 'semantic-ui-react';
+import { Card, Segment, Header } from 'semantic-ui-react';
 import API from '../api/index';
 
 const VOTING_OPTIONS = ['0', '1/2', '1', '2', '3', '5', '8', '13'];
@@ -25,9 +25,12 @@ export default class Voting extends Component {
 
   render() {
     return (
-      <Card.Group itemsPerRow={3}>
-        {this.renderOptions()}
-      </Card.Group>
+      <Segment>
+        <Header as='h4'>What's your estimate?</Header>
+        <Card.Group itemsPerRow={3}>
+          {this.renderOptions()}
+        </Card.Group>
+      </Segment>
     );
   }
 

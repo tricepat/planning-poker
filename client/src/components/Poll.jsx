@@ -3,7 +3,7 @@ import Results from './Results'
 import Voting from './Voting'
 import TaskModal from './TaskModal'
 import API from '../api/index'
-import {Button, Form, Grid, Header, Table, Container, Checkbox, Icon, Item} from 'semantic-ui-react';
+import {Button, Form, Grid, Header, Table, Container, Checkbox, Icon, Item, Segment, Divider } from 'semantic-ui-react';
 
 export default class Poll extends Component {
   constructor(props) {
@@ -49,7 +49,7 @@ export default class Poll extends Component {
     var {id} = this.props.match.params;
     return (
       <Container>
-        <Header as='h2'>Welcome, {username}</Header>
+        <Header as='h3'>Welcome, {username}</Header>
         <Grid columns={2} divided>
           <Grid.Row>
             <Grid.Column>
@@ -106,11 +106,17 @@ export default class Poll extends Component {
     return (
       <div>
         <Grid.Row>
-          <Item content={selectedTask.description}/>
-          <TaskModal name={selectedTask.name} description={selectedTask.description}
-            isNew={false} pollId={id} onSubmit={this.updateTask}
-          />
+          <Segment clearing >
+            <Header as='h4'>
+              Description
+              <Header.Subheader>{selectedTask.description}</Header.Subheader>
+            </Header>
+            <TaskModal name={selectedTask.name} description={selectedTask.description}
+              isNew={false} pollId={id} onSubmit={this.updateTask}
+            />
+          </Segment>
         </Grid.Row>
+        <Divider />
         <Grid.Row>
           {selectedTask.isVotable ? <Voting onSelect={this.vote} selectedOption={selectedOption}/>
             : <Results values={aggregatedVotes}/>}

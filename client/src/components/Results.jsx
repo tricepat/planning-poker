@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Card, Message} from 'semantic-ui-react';
+import { Card, Message, Label, Header, Segment} from 'semantic-ui-react';
 
 export default class Results extends Component {
   constructor(props){
@@ -10,9 +10,12 @@ export default class Results extends Component {
 
   render() {
     return (
-      <Card.Group itemsPerRow={3}>
-        {this.renderValues()}
-      </Card.Group>
+      <Segment>
+        <Header as='h4'>Results</Header>
+        <Card.Group itemsPerRow={3}>
+          {this.renderValues()}
+        </Card.Group>
+      </Segment>
     );
   }
 
@@ -22,8 +25,11 @@ export default class Results extends Component {
     return (sortedValues.length > 0) ?
       sortedValues.map((value, idx) => {
         return (
-          <Card key={value} id={value}  color='black'>
-            <Card.Content content={value} textAlign='center' />
+          <Card key={value[0]} id={value[0]}  color='black'>
+            <Label color='orange' floating>
+              {value[1]}
+            </Label>
+            <Card.Content content={value[0]} textAlign='center' />
           </Card>
         );
       })
