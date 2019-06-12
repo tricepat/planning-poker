@@ -69,7 +69,8 @@ export default class Poll extends Component {
                 <Icon name='thumbs up outline' />
                 <Message.Content>
                   <Message.Header>Glad you're here, {username}.</Message.Header>
-                  Ready to plan?
+                  Ready to play? <br />
+                  Invite others to join with code: {id}
                 </Message.Content>
               </Message>
             </Grid.Row>

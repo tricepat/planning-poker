@@ -1,5 +1,5 @@
 # planning poker
-An app to support [planning poker](https://en.wikipedia.org/wiki/Planning_poker). Built with React, Node.js, Express, fed by MongoDB. Bootstrapped with [Semantic UI React](https://react.semantic-ui.com/).
+An app to support [planning poker](https://en.wikipedia.org/wiki/Planning_poker). Built with React, Node.js, Express, fed by MongoDB via Mongoose. Bootstrapped with [Semantic UI React](https://react.semantic-ui.com/).
 
 ## Setup
 ### Prerequisites
@@ -18,6 +18,7 @@ An app to support [planning poker](https://en.wikipedia.org/wiki/Planning_poker)
 * Add task to poll
 * View and edit task
 * Cast point estimate vote on task
+* Change point estimate vote for task
 * Close task for voting to view results
 
 ## Sample polls
