@@ -8,7 +8,8 @@ An app to support [planning poker](https://en.wikipedia.org/wiki/Planning_poker)
 ### Clone and install dependencies
 * `git clone https://github.com/tricepat/planning-poker.git`
 * `cd planning-poker`
-* `npm install`
+* `cd client && npm install`
+* `cd .. && npm install`
 
 ## Start development server
 * `npm start` starts app on http://localhost:3000 and Node API on http://localhost:3001
