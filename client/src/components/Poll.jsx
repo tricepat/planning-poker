@@ -31,18 +31,19 @@ export default class Poll extends Component {
     if (!location.state || !location.state.userId) { // redirect to 'login' if user is unidentified
       return this.props.history.push(`/`);
     }
-    // get poll, then get tasks and user
+    // get poll, tasks, and user
     API.getPollById(id).then(res => {
-      this.setState({ pollName: res.name });
-    }).catch(e => {
-      this.setState({ errorMsg: 'Oops! Poll does not exist or could not be fetched.' });
-    });
+      if (!res.name) {
+        this.setState({ errorMsg: 'Oops! Poll does not exist.' });
+      } else {
+        this.setState({ pollName: res.name });
+      }
+    }).catch(e => { this.setState({ errorMsg: 'Oops! Poll could not be fetched.' }); });
 
     API.getTasks(id).then(res => {
       this.setState({ tasks: res });
-    }).catch(e => {
-      this.setState({ errorMsg: 'Sorry, tasks could not be fetched.' });
-    });
+    }).catch(e => { this.setState({ errorMsg: 'Sorry, tasks could not be fetched at this time.' }); });
+
     API.getUser(location.state.userId).then(res => {
       this.setState({
         userId: location.state.userId,
@@ -67,7 +68,7 @@ export default class Poll extends Component {
               <Message size='tiny' icon>
                 <Icon name='thumbs up outline' />
                 <Message.Content>
-                  <Message.Header>Glad you're here, {username}</Message.Header>
+                  <Message.Header>Glad you're here, {username}.</Message.Header>
                   Ready to plan?
                 </Message.Content>
               </Message>
@@ -125,12 +126,13 @@ export default class Poll extends Component {
       <div>
         <Grid.Row>
           <Segment clearing >
-            <Header as='h4'>
-              {selectedTask.name}
-              <Header.Subheader>{selectedTask.description}</Header.Subheader>
-            </Header>
             <TaskModal name={selectedTask.name} description={selectedTask.description}
               taskExists={true} pollId={id} taskId={selectedTask._id} onSubmit={this.updateTask}/>
+            <Header as='h4' floated='left'>
+              {selectedTask.name}
+            </Header>
+            <Divider hidden /><Divider hidden />
+            {selectedTask.description}
           </Segment>
         </Grid.Row>
         <Divider />
@@ -163,8 +165,7 @@ export default class Poll extends Component {
     }
     API.vote(selectedTask._id, vote).then(task => {
       this.updateTask(task);
-      // update user's current vote
-      this.setState({ currVote: value });
+      this.setState({ currVote: value }); // update user's vote for currently selected task
     });
   }
 
@@ -172,7 +173,7 @@ export default class Poll extends Component {
     var {tasks, userId} = this.state;
     var selectedTaskId = e.currentTarget.id;
     var selectedTask = tasks.find(t => { return t._id === selectedTaskId; });
-    // find user's vote, if exists
+    // find and set user's vote for selected task, if exists
     var currVote = userId in selectedTask.votes ? selectedTask.votes[userId] : null;
     this.setState({
       selectedTask: selectedTask,
@@ -180,6 +181,7 @@ export default class Poll extends Component {
     });
   }
 
+  // open or close task for voting
   toggleTaskStatus(taskId, e) {
     var {tasks} = this.state;
     var selectedTask = tasks.find(t => { return t._id === taskId; });

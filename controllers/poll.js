@@ -8,9 +8,7 @@ exports.findPollById = function (req, res, next) {
 };
 
 exports.createPoll = function (req, res, next) {
-  var poll = new Poll(
-    { name: req.body.name }
-  );
+  var poll = new Poll( { name: req.body.name } );
   poll.save(function (err) {
     if (err) return next(err);
     res.status(200).json(poll);

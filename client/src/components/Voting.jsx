@@ -22,7 +22,7 @@ export default class Voting extends Component {
   render() {
     return (
       <Segment>
-        <Header as='h4'>How many points?</Header>
+        <Header as='h4'>Cast your points estimate:</Header>
         <Card.Group itemsPerRow={3}>
           {this.renderOptions()}
         </Card.Group>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Form, TextArea, Input, Button, Icon } from 'semantic-ui-react';
+import { Modal, Form, Button, Icon, Divider } from 'semantic-ui-react';
 import API from '../api/index';
 
 export default class TaskModal extends Component {
@@ -34,26 +34,27 @@ export default class TaskModal extends Component {
     var {taskExists} = this.props;
     var iconText = taskExists ? 'Edit' : 'New Task';
     return (
-      <Modal
-        trigger={
+      <Modal trigger={
           <Button floated='right' icon labelPosition='left' primary size='small' onClick={this.handleOpen}>
             {taskExists ? <Icon name='edit' /> : <Icon name='add' /> } {iconText}
           </Button>}
         open={modalOpen}
         onClose={this.handleClose}>
         <Modal.Content >
-          <Modal.Description>
-            <Form>
-              <Input placeholder='Task name' value={name} onChange={this.handleChange.bind(this, 'name')}/>
-              <TextArea placeholder='Description' value={description} onChange={this.handleChange.bind(this, 'description')}/>
-            </Form>
-          </Modal.Description>
-          {taskExists ?
-            <Button floated='right' primary size='small' onClick={this.updateTask}
-              disabled={!name || !description}> Save </Button>
-            : <Button floated='right' primary size='small' onClick={this.addTask}
-              disabled={!name || !description}> Create </Button>}
+          <Form>
+            <Modal.Description>
+                <Form.Input placeholder='Task name' value={name} onChange={this.handleChange.bind(this, 'name')}/>
+                <Form.TextArea placeholder='Description' value={description} onChange={this.handleChange.bind(this, 'description')}/>
+            </Modal.Description>
+            <Divider hidden />
+            {taskExists ?
+            <Form.Button floated='right' primary size='small' onClick={this.updateTask}
+              disabled={!name || !description} content='Save' />
+            : <Form.Button floated='right' primary size='small' onClick={this.addTask}
+              disabled={!name || !description} content='Create' />}
+          </Form>
         </Modal.Content>
+        <Divider hidden />
       </Modal>
     );
   }
@@ -64,7 +65,7 @@ export default class TaskModal extends Component {
     var newTask = {
       name: name,
       description: description,
-      pollId: 'this.props.pollId'
+      pollId: this.props.pollId
     }
     API.createTask(newTask).then(res => { onSubmit(res); });
     this.setState({ modalOpen: false });

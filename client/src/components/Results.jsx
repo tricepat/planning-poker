@@ -13,7 +13,7 @@ export default class Results extends Component {
           {this.renderValues()}
         </Card.Group>
       </Segment>
-        : <Message icon='info' content='No results yet... Reopen task for voting!'/>;
+      : <Message icon='info' content='No results yet... Reopen task for voting!'/>;
     ;
   }
 
